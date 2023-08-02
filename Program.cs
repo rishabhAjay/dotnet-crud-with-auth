@@ -1,3 +1,4 @@
+using HotelListing.API.Configurations.AutoMapperConfig;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -17,6 +18,9 @@ builder.Services.AddDbContext<HotelListing.API.Data.HotelListingDbContext>(optio
 {
     options.UseSqlServer(connectionString);
 });
+
+//register AutoMapper as a service for it to be injectible
+builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 
 //create a policy based on the requirements for your cors setup
 builder.Services.AddCors(options =>
