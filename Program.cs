@@ -1,4 +1,6 @@
 using HotelListing.API.Configurations.AutoMapperConfig;
+using hotelListingAPI.Contracts;
+using hotelListingAPI.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -19,6 +21,9 @@ builder.Services.AddDbContext<HotelListing.API.Data.HotelListingDbContext>(optio
     options.UseSqlServer(connectionString);
 });
 
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
 //register AutoMapper as a service for it to be injectible
 builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 
