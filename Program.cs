@@ -1,6 +1,9 @@
 using HotelListing.API.Configurations.AutoMapperConfig;
+using HotelListing.API.Data;
 using hotelListingAPI.Contracts;
+using hotelListingAPI.data.Entities;
 using hotelListingAPI.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -21,9 +24,17 @@ builder.Services.AddDbContext<HotelListing.API.Data.HotelListingDbContext>(optio
     options.UseSqlServer(connectionString);
 });
 
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
+//we are adding the User model. 
+//we are using the build in identity core package
+//you can also add the context of the DB where you will have your store
+builder.Services.AddIdentityCore<User>().AddRoles<IdentityRole>().AddEntityFrameworkStores<HotelListingDbContext>();
+
+//you are registering these in program.cs to be able to inject it anywhere in your application.
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
+builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
+
 //register AutoMapper as a service for it to be injectible
 builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 

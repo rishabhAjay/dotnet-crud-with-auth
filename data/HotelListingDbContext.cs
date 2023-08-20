@@ -1,8 +1,13 @@
+using hotelListingAPI.data.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.API.Data
 {
-    public class HotelListingDbContext : DbContext
+
+    //we inherit from IdentityDbContext now that we have added Identity Core
+    //we have also added to the context the reference to the User model
+    public class HotelListingDbContext : IdentityDbContext<User>
     //the db context is where all your tables and models go
     {
         public HotelListingDbContext(DbContextOptions options)

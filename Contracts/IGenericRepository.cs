@@ -20,7 +20,7 @@ namespace hotelListingAPI.Contracts
         Task<T> UpdateAsync(T entity);
 
 
-        Task<Boolean> Exists(int id);
+        Task<bool> Exists(int id);
     }
 
 
