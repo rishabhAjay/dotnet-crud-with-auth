@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 using HotelListing.API.Data;
 using HotelListing.API.Models.Countries;
-using AutoMapper;
-using hotelListingAPI.Repositories;
 using hotelListingAPI.Contracts;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 // to generate a controller from the CLI: dotnet-aspnet-codegenerator controller -m Country -dc HotelListingDbContext -api -name CountriesController -outDir Controllers/
 
@@ -34,7 +29,7 @@ namespace hotelListingAPI.Controllers
         //return an enumerable of type GetCountryDto to return only what you need to.
         public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries()
         {
-           try
+            try
             {
                 var countries = await _countriesRepository.GetAllAsync();
                 var records = _mapper.Map<List<GetCountryDto>>(countries);
@@ -48,10 +43,13 @@ namespace hotelListingAPI.Controllers
 
         // GET: api/Countries/5
         [HttpGet("{id}")]
+        //define the decorator to protect the endpoint
+        [Authorize]
         public async Task<ActionResult<GetCountryWithHotelDto>> GetCountry(int id)
         {
 
-            var country = _countriesRepository.GetDetails(id);
+            var country = await _countriesRepository.GetDetails(Convert.ToInt32(id));
+            Console.WriteLine("---->>>>" + country);
 
             if (country == null)
             {
@@ -74,7 +72,7 @@ namespace hotelListingAPI.Controllers
             // _context.Entry(country).State = EntityState.Modified;
 
             //find the record
-            var country = await  _countriesRepository.GetAsync(id); 
+            var country = await _countriesRepository.GetAsync(id);
 
             //map the left side of data to the right side of the model
             _mapper.Map(updateCountryDto, country);
@@ -103,7 +101,7 @@ namespace hotelListingAPI.Controllers
         //the function names that you see(like GetCountry, PostCountry) are actions
         public async Task<ActionResult<Country>> PostCountry(CreateCountryDto createCountry)
         {
-          
+
 
             //mapping data with the incoming body without AutoMapper
             // var country = new Country
@@ -121,16 +119,18 @@ namespace hotelListingAPI.Controllers
 
         // DELETE: api/Countries/5
         [HttpDelete("{id}")]
+        //specify the roles that you want to restrict these actions to. this returns 403
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> DeleteCountry(int id)
         {
-            
+
             var country = await _countriesRepository.GetAsync(id);
             if (country == null)
             {
                 return NotFound();
             }
 
-           await _countriesRepository.DeleteAsync(id);
+            await _countriesRepository.DeleteAsync(id);
 
             return NoContent();
         }

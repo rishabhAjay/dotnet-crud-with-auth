@@ -1,7 +1,6 @@
 ﻿using HotelListing.API.Data;
 using hotelListingAPI.Contracts;
 using Microsoft.EntityFrameworkCore;
-using System.Xml.Linq;
 
 namespace hotelListingAPI.Repositories
 {
@@ -19,9 +18,9 @@ namespace hotelListingAPI.Repositories
 
         public async Task<Country> GetDetails(int id)
         {
-           return await _context.Countries
-                 .Include(q => q.Hotels)
-                 .FirstOrDefaultAsync(q => q.Id == id);
+            return await _context.Countries
+                  .Include(q => q.Hotels)
+                  .FirstOrDefaultAsync();
         }
     }
 }

@@ -3,9 +3,12 @@ using HotelListing.API.Data;
 using hotelListingAPI.Contracts;
 using hotelListingAPI.data.Entities;
 using hotelListingAPI.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,13 +31,45 @@ builder.Services.AddDbContext<HotelListing.API.Data.HotelListingDbContext>(optio
 //we are adding the User model. 
 //we are using the build in identity core package
 //you can also add the context of the DB where you will have your store
-builder.Services.AddIdentityCore<User>().AddRoles<IdentityRole>().AddEntityFrameworkStores<HotelListingDbContext>();
+builder.Services.AddIdentityCore<User>()
+    .AddRoles<IdentityRole>()
+    //add the token provider to be able to generate and do stuff with refresh token provider
+    .AddTokenProvider<DataProtectorTokenProvider<User>>("HotelListingApi")
+    .AddEntityFrameworkStores<HotelListingDbContext>()
+    .AddDefaultTokenProviders();
 
 //you are registering these in program.cs to be able to inject it anywhere in your application.
+builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
+//There are three types: AddScoped, AddTransient and AddSingleton
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
 builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
+builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 
+
+builder.Services.AddAuthentication(options =>
+{
+    //config
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; //Bearer
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; //Bearer 
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        //parameters to impose security
+        //encode the secret key and check against that key
+        ValidateIssuerSigningKey = true,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        //no offset on the time
+        ClockSkew = TimeSpan.Zero,
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+        //secret key
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
+    };
+});
 //register AutoMapper as a service for it to be injectible
 builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 
@@ -73,6 +108,8 @@ app.UseHttpsRedirection();
 // use the policy we defined
 app.UseCors("AllowAll");
 
+//add this middleware to actually validate the incoming tokens to protect endpoints
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
