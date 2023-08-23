@@ -2,9 +2,11 @@ using HotelListing.API.Configurations.AutoMapperConfig;
 using HotelListing.API.Data;
 using hotelListingAPI.Contracts;
 using hotelListingAPI.data.Entities;
+using hotelListingAPI.Middleware;
 using hotelListingAPI.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -73,6 +75,12 @@ builder.Services.AddAuthentication(options =>
 //register AutoMapper as a service for it to be injectible
 builder.Services.AddAutoMapper(typeof(AutoMapperConfig));
 
+builder.Services.AddResponseCaching(options =>
+{
+    options.MaximumBodySize = 1024;
+    options.UseCaseSensitivePaths = true;
+});
+
 //create a policy based on the requirements for your cors setup
 builder.Services.AddCors(options =>
 {
@@ -85,6 +93,28 @@ builder.Services.AddCors(options =>
     );
 });
 
+builder.Services.AddApiVersioning(options =>
+{
+    //default api version if not specified is defined as 1.0
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+
+    //define the different places you can put the api version in the request
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new QueryStringApiVersionReader("api-version"),
+        new HeaderApiVersionReader("X-Version"),
+        new MediaTypeApiVersionReader("ver"));
+
+
+});
+
+//this is the format in which you will be adding your versions in
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
 //configure serilog to write to console and read config from the context of configuration file(appsettings.json)
 builder.Host.UseSerilog(
     (ctx, config) => config.WriteTo.Console().ReadFrom.Configuration(ctx.Configuration)
@@ -100,10 +130,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//add the custom middleware exception
+app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<CachingMiddleware>();
 //use this middleware to log requests that are getting hit on the server
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
+app.UseResponseCaching();
+
 
 // use the policy we defined
 app.UseCors("AllowAll");

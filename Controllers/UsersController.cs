@@ -1,4 +1,5 @@
 ﻿using hotelListingAPI.Contracts;
+using hotelListingAPI.Exceptions;
 using hotelListingAPI.Models.Users;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,10 +10,12 @@ namespace hotelListingAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUsersRepository _usersRepository;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsersController(IUsersRepository usersRepository)
+        public UsersController(IUsersRepository usersRepository, ILogger<UsersController> logger)
         {
             _usersRepository = usersRepository;
+            _logger = logger;
         }
 
 
@@ -26,6 +29,9 @@ namespace hotelListingAPI.Controllers
         //enforce that the data is really coming from the body
         public async Task<ActionResult> Register([FromBody] ApiUserDto apiUserDto)
         {
+            _logger.LogInformation($"Registration Attempt for {apiUserDto.Email}");
+            //try
+            //{
             var errors = await _usersRepository.registerUser(apiUserDto);
 
             //if there are any errors
@@ -37,9 +43,17 @@ namespace hotelListingAPI.Controllers
                     ModelState.AddModelError(error.Code, error.Description);
                 }
 
-                return BadRequest(ModelState);
+                throw new BadRequestException(nameof(Register), ModelState);
             }
             return Ok();
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger.LogError(ex, $"Something went wrong in {nameof(Register)}");
+            //    return Problem($"Something went wrong in {nameof(Register)}. Please contact support"
+            //        , statusCode: 500);
+            //}
+
         }
 
         //post: api/users/login
@@ -50,15 +64,26 @@ namespace hotelListingAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult> Login([FromBody] LoginUserDto loginUserDto)
         {
+            _logger.LogInformation($"Login Attempt for {loginUserDto.Email}");
+            //try
+            //{
             var loginResponse = await _usersRepository.loginUser(loginUserDto);
 
             //if there are any errors
             if (loginResponse == null)
             {
-                return Unauthorized();
+                throw new UnauthorizedException(nameof(Login), loginUserDto.Email);
             }
             else
                 return Ok(loginResponse);
+
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger.LogError(ex, $"Something went wrong in {nameof(Login)}");
+            //    return Problem($"Something went wrong in {nameof(Login)}. Please contact support"
+            //        , statusCode: 500);
+            //}
 
 
         }
@@ -75,7 +100,7 @@ namespace hotelListingAPI.Controllers
             //if there are any errors
             if (loginResponse == null)
             {
-                return Unauthorized();
+                throw new UnauthorizedException(nameof(RefreshToken), loginUserDto.RefreshToken);
             }
             else
                 return Ok(loginResponse);

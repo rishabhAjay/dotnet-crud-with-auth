@@ -3,7 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace hotelListingAPI.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+//the version can also be specified as a param
+[Route("v{version:apiVersion}/[controller]")]
+//[ApiVersion("1.0")]
+
+//you can also specify deprecated to be true
+[ApiVersion("1.0", Deprecated = true)]
 public class WeatherForecastController : ControllerBase
 {
     private static readonly string[] Summaries = new[]
