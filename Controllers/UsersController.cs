@@ -1,6 +1,6 @@
-﻿using hotelListingAPI.Contracts;
-using hotelListingAPI.Exceptions;
-using hotelListingAPI.Models.Users;
+﻿using HotelListing.API.Core.Contracts;
+using HotelListing.API.Core.Exceptions;
+using HotelListing.API.Core.Models.Users;
 using Microsoft.AspNetCore.Mvc;
 
 namespace hotelListingAPI.Controllers

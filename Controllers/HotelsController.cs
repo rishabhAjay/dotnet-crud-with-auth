@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using HotelListing.API.Core.Contracts;
+using HotelListing.API.Core.Models.Hotel;
+using HotelListing.API.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using HotelListing.API.Data;
-using hotelListingAPI.Repositories;
-using hotelListingAPI.Contracts;
-using HotelListing.API.Models.Countries;
-using AutoMapper;
-using HotelListing.API.Models.Hotel;
-using System.Diagnostics.Metrics;
 
 namespace hotelListingAPI.Controllers
 {
@@ -42,11 +34,11 @@ namespace hotelListingAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<HotelDto>> GetHotel(int id)
         {
-         
+
             var hotel = await _hotelsRepository.GetAsync(id);
 
             if (hotel == null)
-            { 
+            {
                 return NotFound();
             }
 
@@ -102,22 +94,22 @@ namespace hotelListingAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHotel(int id)
         {
-          
+
             var hotel = await _hotelsRepository.GetAsync(id);
             if (hotel == null)
             {
                 return NotFound();
             }
 
-           await _hotelsRepository.DeleteAsync(id);
-           
+            await _hotelsRepository.DeleteAsync(id);
+
 
             return NoContent();
         }
 
         private async Task<bool> HotelExists(int id)
         {
-            var hotelExists = await  _hotelsRepository.Exists(id);
+            var hotelExists = await _hotelsRepository.Exists(id);
             return hotelExists;
         }
     }
